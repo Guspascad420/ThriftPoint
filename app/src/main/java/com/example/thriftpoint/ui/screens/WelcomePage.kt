@@ -76,7 +76,7 @@ fun WelcomePage(navController: NavHostController) {
         }
         Spacer(Modifier.height(10.dp))
         OutlinedButton(
-            onClick = { /*TODO*/ },
+            onClick = { navController.navigate(NavRoute.SIGNUP.name) },
             Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp),

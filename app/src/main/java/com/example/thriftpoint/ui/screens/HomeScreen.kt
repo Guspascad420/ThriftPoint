@@ -33,6 +33,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,12 +48,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.thriftpoint.R
 import com.example.thriftpoint.models.Filter
+import com.example.thriftpoint.models.User
 import com.example.thriftpoint.ui.theme.Dark80
 import com.example.thriftpoint.ui.theme.Gray40
 import com.example.thriftpoint.ui.theme.Tosca40
 import com.example.thriftpoint.ui.theme.urbanist
 import com.example.thriftpoint.utils.NavRoute
 import com.example.thriftpoint.viewmodels.MainViewModel
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 val filters = listOf(
     Filter("Semua", R.drawable.group_19115),
@@ -66,8 +70,15 @@ val filters = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavHostController) {
-    val viewModel: MainViewModel = viewModel()
+fun HomeScreen(viewModel: MainViewModel, navController: NavHostController) {
+    val userData = viewModel.user
+
+    LaunchedEffect(key1 = true) {
+        viewModel.currentUserId = Firebase.auth.currentUser?.uid.toString()
+        if (userData == User()) {
+            viewModel.getUserData(viewModel.currentUserId)
+        }
+    }
     Scaffold(
         topBar = { HomeTopBar(navController) },
         bottomBar = { BottomBar(viewModel, navController) }
@@ -289,58 +300,61 @@ fun BottomBar(viewModel: MainViewModel, navController: NavHostController) {
     val profileIconTint =
         if (viewModel.selectedItem == "Profile") Color.Black else Color(0xFF9BA5B7)
 
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 23.dp), Arrangement.SpaceBetween
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            IconButton(onClick = { /*TODO*/ }) {
-                Icon(painterResource(R.drawable.home_05), "Beranda", tint = homeIconTint)
+    Surface(shadowElevation = 10.dp, shape = RoundedCornerShape(25.dp, 25.dp)) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 23.dp), Arrangement.SpaceBetween
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                IconButton(onClick = { navController.navigate(NavRoute.HOME.name) }) {
+                    Icon(painterResource(R.drawable.home_05), "Beranda", tint = homeIconTint)
+                }
+                Text(
+                    "Beranda", Modifier.offset(y = (-12).dp),
+                    fontFamily = urbanist, fontSize = 14.sp, color = Color(0xFF9BA5B7)
+                )
             }
-            Text(
-                "Beranda", Modifier.offset(y = (-12).dp),
-                fontFamily = urbanist, fontSize = 14.sp, color = Color(0xFF9BA5B7)
-            )
-        }
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            IconButton(onClick = { /*TODO*/ }) {
-                Icon(painterResource(R.drawable.heart), "Wishlist", tint = wishlistIconTint)
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                IconButton(onClick = { navController.navigate(NavRoute.WISHLIST.name) }) {
+                    Icon(painterResource(R.drawable.heart), "Wishlist", tint = wishlistIconTint)
+                }
+                Text(
+                    "Wishlist", Modifier.offset(y = (-12).dp),
+                    fontFamily = urbanist, fontSize = 14.sp, color = Color(0xFF9BA5B7)
+                )
             }
-            Text(
-                "Wishlist", Modifier.offset(y = (-12).dp),
-                fontFamily = urbanist, fontSize = 14.sp, color = Color(0xFF9BA5B7)
-            )
-        }
-        Box(Modifier.padding(top = 7.dp)) {
-            Surface(Modifier.size(50.dp), shape = CircleShape, color = Dark80) {
-                IconButton(onClick = { navController.navigate(NavRoute.ADD_PRODUCT.name) }) {
-                    Icon(
-                        Icons.Default.Add, "Add",
-                        Modifier.size(40.dp), tint = Color.White
-                    )
+            Box(Modifier.padding(top = 7.dp)) {
+                Surface(Modifier.size(50.dp), shape = CircleShape, color = Dark80) {
+                    IconButton(onClick = { navController.navigate(NavRoute.ADD_PRODUCT.name) }) {
+                        Icon(
+                            Icons.Default.Add, "Add",
+                            Modifier.size(40.dp), tint = Color.White
+                        )
+                    }
                 }
             }
-        }
 
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            IconButton(onClick = { /*TODO*/ }) {
-                Icon(painterResource(R.drawable.shopping_bag_03), "Bag", tint = bagIconTint)
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                IconButton(onClick = { navController.navigate(NavRoute.BAG.name) }) {
+                    Icon(painterResource(R.drawable.shopping_bag_03), "Bag", tint = bagIconTint)
+                }
+                Text(
+                    "Keranjang", Modifier.offset(y = (-12).dp),
+                    fontFamily = urbanist, fontSize = 14.sp, color = Color(0xFF9BA5B7)
+                )
             }
-            Text(
-                "Keranjang", Modifier.offset(y = (-12).dp),
-                fontFamily = urbanist, fontSize = 14.sp, color = Color(0xFF9BA5B7)
-            )
-        }
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            IconButton(onClick = { navController.navigate(NavRoute.PROFILE.name) }) {
-                Icon(painterResource(R.drawable.user_03), "Profile", tint = profileIconTint)
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                IconButton(onClick = { navController.navigate(NavRoute.PROFILE.name) }) {
+                    Icon(painterResource(R.drawable.user_03), "Profile", tint = profileIconTint)
+                }
+                Text(
+                    "Profil", Modifier.offset(y = (-12).dp),
+                    fontFamily = urbanist,
+                    fontSize = 14.sp, color = Color(0xFF9BA5B7)
+                )
             }
-            Text(
-                "Profil", Modifier.offset(y = (-12).dp),
-                fontFamily = urbanist,
-                fontSize = 14.sp, color = Color(0xFF9BA5B7)
-            )
         }
     }
+
 }

@@ -10,5 +10,9 @@ enum class NavRoute {
     PROFILE,
     ADD_PRODUCT,
     PRODUCTS,
-    PRODUCT_DETAILS
+    PRODUCT_DETAILS,
+    BAG,
+    EDIT_PROFILE,
+    CONFIRM_ORDER,
+    WISHLIST
 }

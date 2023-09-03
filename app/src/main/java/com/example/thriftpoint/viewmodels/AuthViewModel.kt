@@ -34,7 +34,8 @@ class AuthViewModel : ViewModel() {
                 if (task.isSuccessful) {
                     val user = hashMapOf(
                         "name" to name.text,
-                        "email" to email.text
+                        "email" to email.text,
+                        "phone_number" to ""
                     )
                     auth.currentUser?.let { db.collection("users").document(it.uid).set(user) }
                     authUiState = AuthUiState.Success

@@ -56,8 +56,8 @@ val productsInBag = mutableListOf<Product>()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductDetailsScreen(navController: NavHostController, productName: String?) {
-    val product = productList.filter { it.name == productName }[0]
+fun ProductDetailsScreen(navController: NavHostController, productId: String?) {
+    val product = productList.filter { it.id == productId?.toInt() }[0]
     val sizes = listOf("S", "M", "L")
     val viewModel: ProductViewModel = viewModel()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -162,7 +162,6 @@ fun ProductDetailsTopBar(navController: NavHostController) {
 @Composable
 fun ProductDetailsBottomBar(product: Product, snackbarHostState: SnackbarHostState) {
     val scope = rememberCoroutineScope()
-
     Surface(shadowElevation = 10.dp, shape = RoundedCornerShape(25.dp, 25.dp)) {
         Row(
             Modifier
@@ -213,8 +212,12 @@ fun ProductDetailsBottomBar(product: Product, snackbarHostState: SnackbarHostSta
 @Composable
 fun BagSnackbar(snackbarHostState: SnackbarHostState) {
     SnackbarHost(snackbarHostState) { data ->
-        Snackbar(containerColor = Color(0xFFD8F8D3), shape = RoundedCornerShape(20.dp)) {
-            Text(data.visuals.message, fontFamily = urbanist, fontWeight = FontWeight.Medium)
+        Snackbar(
+            Modifier.padding(bottom = 10.dp, start = 20.dp, end = 20.dp),
+            containerColor = Color(0xFFD8F8D3), shape = RoundedCornerShape(20.dp)
+        ) {
+            Text(data.visuals.message, fontFamily = urbanist,
+                fontWeight = FontWeight.Medium, color = Color(0xFF437538))
         }
     }
 }

@@ -29,12 +29,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -46,12 +49,19 @@ import com.example.thriftpoint.ui.theme.Gray80
 import com.example.thriftpoint.ui.theme.Tosca40
 import com.example.thriftpoint.ui.theme.urbanist
 import com.example.thriftpoint.utils.NavRoute
+import com.example.thriftpoint.viewmodels.AuthUiState
 import com.example.thriftpoint.viewmodels.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(navController: NavHostController) {
     val viewModel: AuthViewModel = viewModel()
+    LaunchedEffect(key1 = viewModel.authUiState) {
+        if (viewModel.authUiState == AuthUiState.Success) {
+            navController.navigate(NavRoute.HOME.name)
+        }
+    }
+
     Column(Modifier.padding(20.dp, 10.dp)) {
         Spacer(Modifier.height(20.dp))
         Surface(
@@ -134,7 +144,9 @@ fun SignUpScreen(navController: NavHostController) {
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 containerColor = Color(0xFFF7F8F9),
                 unfocusedBorderColor = Color(0xFFE8ECF4)
-            )
+            ),
+            visualTransformation = if (viewModel.isPasswordVisible) VisualTransformation.None
+                                   else PasswordVisualTransformation()
         )
         OutlinedTextField(
             value = viewModel.passwordConfirm,
@@ -154,10 +166,12 @@ fun SignUpScreen(navController: NavHostController) {
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 containerColor = Color(0xFFF7F8F9),
                 unfocusedBorderColor = Color(0xFFE8ECF4)
-            )
+            ),
+            visualTransformation = if (viewModel.isPasswordVisible) VisualTransformation.None
+                                   else PasswordVisualTransformation()
         )
         Button(
-            onClick = { /*TODO*/ },
+            onClick = { viewModel.handleSignUp() },
             Modifier
                 .fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),

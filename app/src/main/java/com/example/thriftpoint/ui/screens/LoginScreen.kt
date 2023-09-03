@@ -32,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -56,6 +57,7 @@ import com.example.thriftpoint.ui.theme.Tosca40
 import com.example.thriftpoint.ui.theme.urbanist
 import com.example.thriftpoint.utils.NavRoute
 import com.example.thriftpoint.utils.NoRippleInteractionSource
+import com.example.thriftpoint.viewmodels.AuthUiState
 import com.example.thriftpoint.viewmodels.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,9 +66,16 @@ fun LoginScreen(navController: NavHostController) {
     val viewModel: AuthViewModel = viewModel()
     val allNotFilled = remember {
         derivedStateOf {
-            viewModel.email.text.isEmpty() && viewModel.password.text.isEmpty()
+            viewModel.email.text.isEmpty() || viewModel.password.text.isEmpty()
         }
     }
+
+    LaunchedEffect(key1 = viewModel.authUiState) {
+        if (viewModel.authUiState == AuthUiState.Success) {
+            navController.navigate(NavRoute.HOME.name)
+        }
+    }
+
     Column(Modifier.padding(20.dp, 10.dp)) {
         Spacer(Modifier.height(20.dp))
         Surface(
@@ -161,9 +170,8 @@ fun LoginScreen(navController: NavHostController) {
         }
         Spacer(Modifier.height(30.dp))
         Button(
-            onClick = { navController.navigate(NavRoute.HOME.name) },
-            Modifier
-                .fillMaxWidth(),
+            onClick = { viewModel.handleLogin() },
+            Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),
             colors = ButtonDefaults.buttonColors(Dark80),
             enabled = !allNotFilled.value

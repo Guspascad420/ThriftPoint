@@ -49,10 +49,10 @@ import com.example.thriftpoint.ui.theme.urbanist
 import com.example.thriftpoint.utils.NavRoute
 
 val productList = listOf(
-    Product("Hoodie Nike Preloved", R.drawable.rectangle_568, "Rp. 49.000", false),
-    Product("Nike windrunner Preloved", R.drawable.rectangle_569, "Rp. 49.000", false),
-    Product("Training Top Nike Preloved", R.drawable.frame_20, "Rp. 49.000", false),
-    Product("Nike windrunner Preloved", R.drawable.frame_21, "Rp. 49.000", false)
+    Product(1, "Hoodie Nike Preloved", R.drawable.rectangle_568, "Rp. 49.000", false),
+    Product(2, "Nike windrunner Preloved", R.drawable.rectangle_569, "Rp. 49.000", false),
+    Product(3, "Training Top Nike Preloved", R.drawable.frame_20, "Rp. 49.000", false),
+    Product(4, "Nike windrunner Preloved", R.drawable.frame_21, "Rp. 49.000", false)
 )
 
 val productsInWishlist = mutableListOf<Product>()
@@ -101,7 +101,7 @@ fun ProductsScreen(navController: NavHostController, filterName: String?) {
                     items(productList) { product ->
                         ProductCard(product) {
                             navController.navigate(
-                                NavRoute.PRODUCT_DETAILS.name + "/" + product.name
+                                NavRoute.PRODUCT_DETAILS.name + "/" + product.id
                             )
                         }
                     }
