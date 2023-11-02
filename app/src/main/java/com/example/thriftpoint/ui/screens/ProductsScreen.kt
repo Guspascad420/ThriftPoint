@@ -2,6 +2,7 @@ package com.example.thriftpoint.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,44 +23,56 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 import com.example.thriftpoint.R
+import com.example.thriftpoint.data.remote_source.HttpEndpoint
 import com.example.thriftpoint.models.Product
 import com.example.thriftpoint.ui.theme.urbanist
 import com.example.thriftpoint.utils.NavRoute
-
-val productList = listOf(
-    Product(1, "Hoodie Nike Preloved", R.drawable.rectangle_568, "Rp. 49.000", false),
-    Product(2, "Nike windrunner Preloved", R.drawable.rectangle_569, "Rp. 49.000", false),
-    Product(3, "Training Top Nike Preloved", R.drawable.frame_20, "Rp. 49.000", false),
-    Product(4, "Nike windrunner Preloved", R.drawable.frame_21, "Rp. 49.000", false)
-)
-
-val productsInWishlist = mutableListOf<Product>()
+import com.example.thriftpoint.viewmodels.ProductViewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductsScreen(navController: NavHostController, filterName: String?) {
+fun ProductsScreen(viewModel: ProductViewModel, navController: NavHostController, filterName: String?) {
+    val allProductsState = viewModel.allProductsState.collectAsState()
+    val productsInWishlistState = viewModel.productsInWishlistState.collectAsState()
+    var isLoading by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        viewModel.getAllProducts()
+        viewModel.getWishlist()
+        delay(2000)
+        productsInWishlistState.value.data?.let { response ->
+            viewModel.productsInWishlist.addAll(response.data)
+        }
+        isLoading = false
+    }
+
     Scaffold(
         topBar = { HomeTopBar(navController) },
     ) {
@@ -97,14 +110,21 @@ fun ProductsScreen(navController: NavHostController, filterName: String?) {
                     fontWeight = FontWeight.Bold, fontSize = 20.sp
                 )
                 Spacer(Modifier.height(15.dp))
-                LazyVerticalGrid(columns = GridCells.Fixed(2)) {
-                    items(productList) { product ->
-                        ProductCard(product) {
-                            navController.navigate(
-                                NavRoute.PRODUCT_DETAILS.name + "/" + product.id
-                            )
+                if (!isLoading)
+                    LazyVerticalGrid(columns = GridCells.Fixed(2),
+                        horizontalArrangement = Arrangement.spacedBy(15.dp)) {
+                        allProductsState.value.data?.let { response ->
+                            items(response.data) { product ->
+                                ProductCard(product, viewModel) {
+                                    navController.navigate(
+                                        NavRoute.PRODUCT_DETAILS.name + "/" + product.id
+                                    )
+                                }
+                            }
                         }
                     }
+                else Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
             }
         }
@@ -112,24 +132,41 @@ fun ProductsScreen(navController: NavHostController, filterName: String?) {
 }
 
 @Composable
-fun ProductCard(product: Product, navigateToDetails: () -> Unit) {
-    val wishlistIcon = if (product in productsInWishlist) Icons.Default.Favorite else Icons.Default.FavoriteBorder
-    val wishlistIconTint = if (product in productsInWishlist) Color.Red else Color(0xFF9BA5B7)
+fun ProductCard(product: Product, viewModel: ProductViewModel, navigateToDetails: () -> Unit) {
+    var wishlistIcon by remember {
+        mutableStateOf(if (product in viewModel.productsInWishlist)
+            Icons.Default.Favorite else Icons.Default.FavoriteBorder)
+    }
 
-    Column(Modifier.padding(start = 10.dp, top = 10.dp)) {
+    var wishlistIconTint by remember {
+        mutableStateOf(if (product in viewModel.productsInWishlist)
+            Color.Red else Color(0xFF9BA5B7))
+    }
+
+    Column(Modifier.padding(top = 10.dp).clickable { navigateToDetails() }) {
         Box(Modifier.wrapContentSize()) {
-            Image(
-                painterResource(product.img), "Product Image",
-                Modifier
-                    .width(155.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .clickable { navigateToDetails() },
+            AsyncImage(
+                HttpEndpoint.IMG_BASE_URL + product.imageRes ,
+                null,
+                modifier = Modifier
+                    .width(180.dp)
+                    .height(250.dp)
+                    .clip(RoundedCornerShape(20.dp)),
+                contentScale = ContentScale.Crop
             )
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(end = 14.dp), Alignment.TopEnd) {
-                IconButton(onClick = { productsInWishlist.add(product) }) {
+            Box(Modifier.fillMaxWidth(), Alignment.TopEnd) {
+                IconButton(onClick = {
+                    if (wishlistIconTint != Color.Red) {
+                        viewModel.addProductToWishlist(product)
+                        wishlistIcon = Icons.Default.Favorite
+                        wishlistIconTint = Color.Red
+                    } else {
+                        viewModel.addProductToWishlist(product)
+                        wishlistIcon = Icons.Default.FavoriteBorder
+                        wishlistIconTint = Color(0xFF9BA5B7)
+                    }
+                    println(viewModel.productsInWishlist)
+                }) {
                     Icon(wishlistIcon, null, tint = wishlistIconTint)
                 }
             }
@@ -140,7 +177,7 @@ fun ProductCard(product: Product, navigateToDetails: () -> Unit) {
             lineHeight = 18.sp
         )
         Text(
-            product.price,
+            "${product.price}",
             fontFamily = urbanist,
             fontWeight = FontWeight.SemiBold,
             fontSize = 14.sp

@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -33,6 +34,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -47,9 +49,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.thriftpoint.R
+import com.example.thriftpoint.data.remote_source.Resource
 import com.example.thriftpoint.ui.theme.Dark80
 import com.example.thriftpoint.ui.theme.Gray40
 import com.example.thriftpoint.ui.theme.Gray80
@@ -59,20 +63,38 @@ import com.example.thriftpoint.utils.NavRoute
 import com.example.thriftpoint.utils.NoRippleInteractionSource
 import com.example.thriftpoint.viewmodels.AuthUiState
 import com.example.thriftpoint.viewmodels.AuthViewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(navController: NavHostController) {
-    val viewModel: AuthViewModel = viewModel()
+    val viewModel = hiltViewModel<AuthViewModel>()
     val allNotFilled = remember {
         derivedStateOf {
             viewModel.email.text.isEmpty() || viewModel.password.text.isEmpty()
         }
     }
+    val loginState = viewModel.loginState.collectAsState()
 
-    LaunchedEffect(key1 = viewModel.authUiState) {
-        if (viewModel.authUiState == AuthUiState.Success) {
-            navController.navigate(NavRoute.HOME.name)
+    LaunchedEffect(key1 = loginState.value) {
+        when (loginState.value) {
+            is Resource.Error -> {
+                viewModel.isLoading = false
+                viewModel.error = true
+            }
+            is Resource.Loading -> {}
+            is Resource.Success -> {
+                loginState.value.data?.let {
+                    viewModel.saveToken(it.data.token)
+                    delay(2000)
+                    viewModel.isLoading = false
+                    navController.navigate(NavRoute.HOME.name) {
+                        popUpTo(NavRoute.LOGIN.name) {
+                            inclusive = true
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -170,17 +192,21 @@ fun LoginScreen(navController: NavHostController) {
         }
         Spacer(Modifier.height(30.dp))
         Button(
-            onClick = { viewModel.handleLogin() },
+            onClick = {
+                viewModel.isLoading = true
+                viewModel.handleLogin()
+            },
             Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),
             colors = ButtonDefaults.buttonColors(Dark80),
             enabled = !allNotFilled.value
         ) {
+            if (!viewModel.isLoading)
             Text(
                 "Masuk", fontFamily = urbanist,
                 fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(vertical = 15.dp),
                 color = Color.White, fontSize = 17.sp
-            )
+            ) else CircularProgressIndicator(color = Color.White)
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,

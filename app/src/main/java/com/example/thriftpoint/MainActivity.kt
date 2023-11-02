@@ -1,16 +1,17 @@
 package com.example.thriftpoint
 
+import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.thriftpoint.ui.screens.AccountDetails
 import com.example.thriftpoint.ui.screens.AddProduct
-import com.example.thriftpoint.ui.screens.BagScreen
+import com.example.thriftpoint.ui.screens.CartScreen
 import com.example.thriftpoint.ui.screens.ConfirmOrder
 import com.example.thriftpoint.ui.screens.EditProfile
 import com.example.thriftpoint.ui.screens.ForgotPassword
@@ -20,12 +21,17 @@ import com.example.thriftpoint.ui.screens.NotificationScreen
 import com.example.thriftpoint.ui.screens.ProductDetailsScreen
 import com.example.thriftpoint.ui.screens.ProductsScreen
 import com.example.thriftpoint.ui.screens.SignUpScreen
+import com.example.thriftpoint.ui.screens.SplashScreen
 import com.example.thriftpoint.ui.screens.WelcomePage
 import com.example.thriftpoint.ui.screens.WishlistScreen
 import com.example.thriftpoint.ui.theme.ThriftPointTheme
 import com.example.thriftpoint.utils.NavRoute
 import com.example.thriftpoint.viewmodels.MainViewModel
+import com.example.thriftpoint.viewmodels.ProductViewModel
+import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.HiltAndroidApp
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private lateinit var navController: NavHostController
 
@@ -33,11 +39,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             navController = rememberNavController()
-            val mainViewModel: MainViewModel = viewModel()
+            val mainViewModel = hiltViewModel<MainViewModel>()
+            val productViewModel = hiltViewModel<ProductViewModel>()
 
             ThriftPointTheme {
                 // A surface container using the 'background' color from the theme
-                NavHost(navController = navController, startDestination = NavRoute.WELCOME.name) {
+                NavHost(navController = navController, startDestination = NavRoute.SPLASH.name) {
+                    composable(NavRoute.SPLASH.name) {
+                        SplashScreen(mainViewModel, navController)
+                    }
                     composable(NavRoute.WELCOME.name) {
                         WelcomePage(navController)
                     }
@@ -61,17 +71,17 @@ class MainActivity : ComponentActivity() {
                     }
                     composable(NavRoute.PRODUCTS.name + "/{filter}") {
                         val filter = it.arguments?.getString("filter")
-                        ProductsScreen(navController, filter)
+                        ProductsScreen(productViewModel, navController, filter)
                     }
                     composable(NavRoute.PRODUCT_DETAILS.name + "/{id}") {
                         val productId = it.arguments?.getString("id")
-                        ProductDetailsScreen(navController, productId)
+                        ProductDetailsScreen(productViewModel, navController, productId!!)
                     }
                     composable(NavRoute.PROFILE.name) {
                         AccountDetails(mainViewModel, navController)
                     }
                     composable(NavRoute.BAG.name) {
-                        BagScreen(navController)
+                        CartScreen(navController)
                     }
                     composable(NavRoute.EDIT_PROFILE.name) {
                         EditProfile(mainViewModel, navController)
@@ -81,10 +91,12 @@ class MainActivity : ComponentActivity() {
                         ConfirmOrder(mainViewModel, navController, totalPrice)
                     }
                     composable(NavRoute.WISHLIST.name) {
-                        WishlistScreen(navController)
+                        WishlistScreen(productViewModel, navController)
                     }
                 }
             }
         }
     }
 }
+@HiltAndroidApp
+class MainApplication : Application()

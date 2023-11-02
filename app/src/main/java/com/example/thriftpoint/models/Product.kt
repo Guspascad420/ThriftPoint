@@ -1,9 +1,11 @@
 package com.example.thriftpoint.models
 
+import com.google.gson.annotations.SerializedName
+
 data class Product(
     val id: Int,
     val name: String,
-    val img: Int,
-    val price: String,
-    val isFavorite: Boolean
+    @SerializedName("image_res")
+    val imageRes: String,
+    val price: Int,
 )

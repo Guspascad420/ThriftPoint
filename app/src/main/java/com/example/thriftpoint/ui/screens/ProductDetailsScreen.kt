@@ -1,7 +1,6 @@
 package com.example.thriftpoint.ui.screens
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,8 +31,13 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -42,29 +46,40 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 import com.example.thriftpoint.R
+import com.example.thriftpoint.data.remote_source.HttpEndpoint
 import com.example.thriftpoint.models.Product
 import com.example.thriftpoint.ui.theme.Gray80
 import com.example.thriftpoint.ui.theme.Tosca40
 import com.example.thriftpoint.ui.theme.urbanist
 import com.example.thriftpoint.viewmodels.ProductViewModel
 import kotlinx.coroutines.launch
+import java.text.DecimalFormat
 
-val productsInBag = mutableListOf<Product>()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductDetailsScreen(navController: NavHostController, productId: String?) {
-    val product = productList.filter { it.id == productId?.toInt() }[0]
+fun ProductDetailsScreen(viewModel: ProductViewModel, navController: NavHostController, productId: String) {
+    val allProductsState = viewModel.allProductsState.collectAsState()
+    var product: Product by remember { mutableStateOf(Product(0, "", "", 0)) }
+    val formatter = DecimalFormat("#,###")
+
+    LaunchedEffect(Unit) {
+        allProductsState.value.data?.let { response ->
+            product = response.data.filter { product ->
+                product.id == productId.toInt()
+            }[0]
+        }
+    }
+
     val sizes = listOf("S", "M", "L")
-    val viewModel: ProductViewModel = viewModel()
     val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
         topBar = { ProductDetailsTopBar(navController) },
-        bottomBar = { ProductDetailsBottomBar(product, snackbarHostState) },
+        bottomBar = { ProductDetailsBottomBar(product, viewModel::addProductToCart, snackbarHostState) },
         snackbarHost = { BagSnackbar(snackbarHostState) }
     ) {
         Column(
@@ -72,9 +87,10 @@ fun ProductDetailsScreen(navController: NavHostController, productId: String?) {
                 .padding(it)
                 .verticalScroll(rememberScrollState())
         ) {
-            Image(
-                painterResource(product.img), contentDescription = "Product Image",
-                Modifier.padding(20.dp)
+            AsyncImage(
+                HttpEndpoint.IMG_BASE_URL + product.imageRes ,
+                null,
+                modifier = Modifier.padding(20.dp).size(400.dp)
             )
             Column(Modifier.padding(horizontal = 20.dp)) {
                 Text(
@@ -82,18 +98,12 @@ fun ProductDetailsScreen(navController: NavHostController, productId: String?) {
                     fontWeight = FontWeight.Medium, fontSize = 20.sp
                 )
                 Text(
-                    product.price, Modifier.padding(top = 10.dp, bottom = 20.dp),
+                    "Rp ${formatter.format(product.price)}", Modifier.padding(top = 10.dp,
+                        bottom = 20.dp),
                     fontFamily = urbanist, fontWeight = FontWeight.SemiBold,
                     fontSize = 16.sp
                 )
                 Row(Modifier.offset(y = (-8).dp), verticalAlignment = Alignment.CenterVertically) {
-                    Row {
-                        Text(
-                            "Warna", fontFamily = urbanist,
-                            fontWeight = FontWeight.Medium, fontSize = 15.sp
-                        )
-                    }
-                    Spacer(Modifier.width(25.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             "Ukuran", Modifier.padding(end = 25.dp), fontFamily = urbanist,
@@ -160,7 +170,8 @@ fun ProductDetailsTopBar(navController: NavHostController) {
 }
 
 @Composable
-fun ProductDetailsBottomBar(product: Product, snackbarHostState: SnackbarHostState) {
+fun ProductDetailsBottomBar(product: Product, onBuyTapped: (Product) -> Unit,
+    snackbarHostState: SnackbarHostState) {
     val scope = rememberCoroutineScope()
     Surface(shadowElevation = 10.dp, shape = RoundedCornerShape(25.dp, 25.dp)) {
         Row(
@@ -192,7 +203,7 @@ fun ProductDetailsBottomBar(product: Product, snackbarHostState: SnackbarHostSta
             Spacer(Modifier.width(10.dp))
             Button(
                 onClick = {
-                    productsInBag.add(product)
+                    onBuyTapped(product)
                     scope.launch {
                         snackbarHostState.showSnackbar("Berhasil Ditambahkan ke Keranjang")
                     }

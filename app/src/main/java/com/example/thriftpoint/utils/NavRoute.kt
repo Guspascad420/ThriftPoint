@@ -1,6 +1,7 @@
 package com.example.thriftpoint.utils
 
 enum class NavRoute {
+    SPLASH,
     WELCOME,
     LOGIN,
     SIGNUP,

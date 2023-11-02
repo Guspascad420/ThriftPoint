@@ -20,6 +20,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -36,7 +38,12 @@ import com.example.thriftpoint.viewmodels.MainViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountDetails(viewModel: MainViewModel, navController: NavHostController) {
-    val user = viewModel.user
+    val userDataState = viewModel.userDataState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.getUserData()
+    }
+
     Scaffold(topBar = { CommonTopBar("Akun Saya", navController) }) {
         Column(Modifier.padding(it)) {
             Row(
@@ -46,13 +53,16 @@ fun AccountDetails(viewModel: MainViewModel, navController: NavHostController) {
                 Row {
                     Image(painterResource(R.drawable.foto_profil), null)
                     Column(Modifier.padding(start = 4.dp)) {
-                        Text(user.name, fontFamily = urbanist,
-                            fontWeight = FontWeight.SemiBold, fontSize = 20.sp,
-                            color = Color(0xFF545F71))
-                        Text(user.phone_number, fontFamily = urbanist,
-                            fontSize = 15.sp, color = Color(0xFF545F71))
-                        Text(user.email, fontFamily = urbanist,
-                            fontSize = 15.sp, color = Color(0xFF545F71))
+                        userDataState.value.data?.let { user ->
+                            Text(user.data.name, fontFamily = urbanist,
+                                fontWeight = FontWeight.SemiBold, fontSize = 20.sp,
+                                color = Color(0xFF545F71))
+//                            Text(user.data.phone_number, fontFamily = urbanist,
+//                                fontSize = 15.sp, color = Color(0xFF545F71))
+                            Text(user.data.email, fontFamily = urbanist,
+                                fontSize = 15.sp, color = Color(0xFF545F71))
+                        }
+
                     }
                 }
                 IconButton(onClick = { /*TODO*/ }) {

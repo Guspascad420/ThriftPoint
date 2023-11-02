@@ -34,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,19 +45,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.thriftpoint.R
 import com.example.thriftpoint.models.Filter
-import com.example.thriftpoint.models.User
 import com.example.thriftpoint.ui.theme.Dark80
 import com.example.thriftpoint.ui.theme.Gray40
 import com.example.thriftpoint.ui.theme.Tosca40
 import com.example.thriftpoint.ui.theme.urbanist
 import com.example.thriftpoint.utils.NavRoute
 import com.example.thriftpoint.viewmodels.MainViewModel
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 
 val filters = listOf(
     Filter("Semua", R.drawable.group_19115),
@@ -71,14 +68,6 @@ val filters = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(viewModel: MainViewModel, navController: NavHostController) {
-    val userData = viewModel.user
-
-    LaunchedEffect(key1 = true) {
-        viewModel.currentUserId = Firebase.auth.currentUser?.uid.toString()
-        if (userData == User()) {
-            viewModel.getUserData(viewModel.currentUserId)
-        }
-    }
     Scaffold(
         topBar = { HomeTopBar(navController) },
         bottomBar = { BottomBar(viewModel, navController) }

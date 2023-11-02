@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -24,6 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -31,17 +33,24 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 import com.example.thriftpoint.R
+import com.example.thriftpoint.data.remote_source.HttpEndpoint
 import com.example.thriftpoint.ui.theme.Tosca40
 import com.example.thriftpoint.ui.theme.urbanist
 import com.example.thriftpoint.utils.CommonTopBar
 import com.example.thriftpoint.utils.NavRoute
 import com.example.thriftpoint.viewmodels.MainViewModel
+import com.example.thriftpoint.viewmodels.ProductViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConfirmOrder(viewModel: MainViewModel, navController: NavHostController, totalPrice: String?) {
+    val userDataState = viewModel.userDataState.collectAsState()
+    val productViewModel = hiltViewModel<ProductViewModel>()
+
     Scaffold(
         topBar = { CommonTopBar("Konfirmasi Pemesanan", navController) },
         bottomBar = { ConfirmOrderBottomBar(totalPrice) }
@@ -51,7 +60,7 @@ fun ConfirmOrder(viewModel: MainViewModel, navController: NavHostController, tot
                 .padding(it)
                 .padding(horizontal = 20.dp)
         ) {
-            productsInBag.forEach { product ->
+            productViewModel.productsInCart.forEach { product ->
                 Card(
                     Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
@@ -59,18 +68,19 @@ fun ConfirmOrder(viewModel: MainViewModel, navController: NavHostController, tot
                     elevation = CardDefaults.cardElevation(10.dp)
                 ) {
                     Row(Modifier.padding(12.dp)) {
-                        Image(
-                            painterResource(product.img), null,
-                            Modifier
-                                .width(95.dp)
-                                .clip(RoundedCornerShape(14.dp))
+                        AsyncImage(
+                            HttpEndpoint.IMG_BASE_URL + product.imageRes ,
+                            null,
+                            modifier = Modifier
+                                .size(95.dp)
+                                .clip(RoundedCornerShape(18.dp))
                         )
                         Column(Modifier.padding(start = 15.dp)) {
                             Text(
                                 product.name, fontFamily = urbanist, fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium
                             )
-                            Text(product.price, fontFamily = urbanist, fontSize = 20.sp)
+                            Text("${product.price}", fontFamily = urbanist, fontSize = 20.sp)
                             Spacer(Modifier.height(40.dp))
                             Button(
                                 onClick = { /*TODO*/ },
@@ -102,23 +112,20 @@ fun ConfirmOrder(viewModel: MainViewModel, navController: NavHostController, tot
             Row(Modifier.padding(vertical = 8.dp)) {
                 Image(painterResource(R.drawable.rectangle_584), "Map")
                 Column(Modifier.padding(start = 12.dp)) {
-                    Text(
-                        viewModel.user.name, fontFamily = urbanist,
-                        fontWeight = FontWeight.Medium, fontSize = 17.sp
-                    )
-                    Text(
-                        viewModel.user.name, fontFamily = urbanist,
-                        fontWeight = FontWeight.Medium, fontSize = 17.sp,
-                        color = Color(0xFF999999)
-                    )
-                    Text(
-                        "310-823 Filkom UB", fontFamily = urbanist,
-                        fontSize = 15.sp, color = Color(0xFF545F71)
-                    )
-                    Text(
-                        "Malang, Jawa Timur", fontFamily = urbanist,
-                        fontSize = 15.sp, color = Color(0xFF545F71)
-                    )
+                    userDataState.value.data?.let { user ->
+                        Text(
+                            user.data.name, fontFamily = urbanist,
+                            fontWeight = FontWeight.Medium, fontSize = 17.sp
+                        )
+                        Text(
+                            "310-823 Filkom UB", fontFamily = urbanist,
+                            fontSize = 15.sp, color = Color(0xFF545F71)
+                        )
+                        Text(
+                            "Malang, Jawa Timur", fontFamily = urbanist,
+                            fontSize = 15.sp, color = Color(0xFF545F71)
+                        )
+                    }
                 }
             }
             Spacer(Modifier.height(17.dp))

@@ -32,6 +32,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.thriftpoint.ui.theme.Dark80
@@ -45,7 +46,7 @@ import com.example.thriftpoint.viewmodels.AuthViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForgotPassword(navController: NavHostController) {
-    val viewModel: AuthViewModel = viewModel()
+    val viewModel = hiltViewModel<AuthViewModel>()
     Column(Modifier.padding(20.dp, 10.dp)) {
         Spacer(Modifier.height(20.dp))
         Surface(

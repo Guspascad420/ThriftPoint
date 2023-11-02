@@ -13,6 +13,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,6 +33,8 @@ import com.example.thriftpoint.viewmodels.MainViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfile(viewModel: MainViewModel, navController: NavHostController) {
+    val userDataState = viewModel.userDataState.collectAsState()
+
     Scaffold(topBar = { CommonTopBar("Edit profil", navController)}) {
         Column(Modifier.padding(it)) {
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -43,52 +46,54 @@ fun EditProfile(viewModel: MainViewModel, navController: NavHostController) {
             Spacer(Modifier.height(15.dp))
             Text("Nama", fontFamily = urbanist,
                 fontWeight = FontWeight.Bold, fontSize = 17.sp)
-            OutlinedTextField(
-                value = viewModel.user.name,
-                onValueChange = { newValue -> viewModel.user.name = newValue },
-                Modifier.fillMaxWidth().padding(bottom = 10.dp),
-                textStyle = TextStyle(
-                    fontFamily = urbanist, fontWeight = FontWeight.SemiBold
-                ),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    containerColor = Color(0xFFF7F8F9),
-                    unfocusedBorderColor = Color(0xFFE8ECF4)
+            userDataState.value.data?.let { user ->
+                OutlinedTextField(
+                    value = user.data.name,
+                    onValueChange = { },
+                    Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                    textStyle = TextStyle(
+                        fontFamily = urbanist, fontWeight = FontWeight.SemiBold
+                    ),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = Color(0xFFF7F8F9),
+                        unfocusedBorderColor = Color(0xFFE8ECF4)
+                    )
                 )
-            )
-            Spacer(Modifier.height(8.dp))
-            Text("No. Telepon", fontFamily = urbanist,
-                fontWeight = FontWeight.Bold, fontSize = 17.sp)
-            OutlinedTextField(
-                value = viewModel.user.phone_number,
-                onValueChange = { newValue -> viewModel.user.phone_number = newValue },
-                Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 10.dp),
-                textStyle = TextStyle(
-                    fontFamily = urbanist, fontWeight = FontWeight.SemiBold
-                ),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    containerColor = Color(0xFFF7F8F9),
-                    unfocusedBorderColor = Color(0xFFE8ECF4)
+                Spacer(Modifier.height(8.dp))
+                Text("No. Telepon", fontFamily = urbanist,
+                    fontWeight = FontWeight.Bold, fontSize = 17.sp)
+//                OutlinedTextField(
+//                    value = viewModel.user.phone_number,
+//                    onValueChange = {  },
+//                    Modifier
+//                        .fillMaxWidth()
+//                        .padding(bottom = 10.dp),
+//                    textStyle = TextStyle(
+//                        fontFamily = urbanist, fontWeight = FontWeight.SemiBold
+//                    ),
+//                    colors = TextFieldDefaults.outlinedTextFieldColors(
+//                        containerColor = Color(0xFFF7F8F9),
+//                        unfocusedBorderColor = Color(0xFFE8ECF4)
+//                    )
+//                )
+                Spacer(Modifier.height(8.dp))
+                Text("Email", fontFamily = urbanist,
+                    fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                OutlinedTextField(
+                    value = user.data.email,
+                    onValueChange = {  },
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 10.dp),
+                    textStyle = TextStyle(
+                        fontFamily = urbanist, fontWeight = FontWeight.SemiBold
+                    ),
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = Color(0xFFF7F8F9),
+                        unfocusedBorderColor = Color(0xFFE8ECF4)
+                    )
                 )
-            )
-            Spacer(Modifier.height(8.dp))
-            Text("Email", fontFamily = urbanist,
-                fontWeight = FontWeight.Bold, fontSize = 17.sp)
-            OutlinedTextField(
-                value = viewModel.user.email,
-                onValueChange = { newValue -> viewModel.user.email = newValue },
-                Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 10.dp),
-                textStyle = TextStyle(
-                    fontFamily = urbanist, fontWeight = FontWeight.SemiBold
-                ),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    containerColor = Color(0xFFF7F8F9),
-                    unfocusedBorderColor = Color(0xFFE8ECF4)
-                )
-            )
+            }
             Spacer(Modifier.height(15.dp))
             Button(onClick = { }, Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
                 Text("Simpan Perubahan", fontFamily = urbanist,

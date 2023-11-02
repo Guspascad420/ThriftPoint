@@ -14,10 +14,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBackIos
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -30,6 +30,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,25 +42,44 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.thriftpoint.R
+import com.example.thriftpoint.data.remote_source.Resource
 import com.example.thriftpoint.ui.theme.Dark80
 import com.example.thriftpoint.ui.theme.Gray40
 import com.example.thriftpoint.ui.theme.Gray80
 import com.example.thriftpoint.ui.theme.Tosca40
 import com.example.thriftpoint.ui.theme.urbanist
 import com.example.thriftpoint.utils.NavRoute
-import com.example.thriftpoint.viewmodels.AuthUiState
 import com.example.thriftpoint.viewmodels.AuthViewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(navController: NavHostController) {
-    val viewModel: AuthViewModel = viewModel()
-    LaunchedEffect(key1 = viewModel.authUiState) {
-        if (viewModel.authUiState == AuthUiState.Success) {
-            navController.navigate(NavRoute.HOME.name)
+    val viewModel = hiltViewModel<AuthViewModel>()
+    val signUpState = viewModel.signUpState.collectAsState()
+
+    LaunchedEffect(key1 = signUpState.value) {
+        when (signUpState.value) {
+            is Resource.Error -> {
+                viewModel.isLoading = false
+            }
+
+            is Resource.Loading -> {}
+            is Resource.Success -> {
+                viewModel.isLoading = false
+                signUpState.value.data?.let {
+                    viewModel.saveToken(it.data.token)
+                    delay(2000)
+                    navController.navigate(NavRoute.HOME.name) {
+                        popUpTo(NavRoute.SIGNUP.name) {
+                            inclusive = true
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -87,7 +108,8 @@ fun SignUpScreen(navController: NavHostController) {
             value = viewModel.name,
             onValueChange = { viewModel.name = it },
             Modifier
-                .fillMaxWidth().padding(bottom = 10.dp),
+                .fillMaxWidth()
+                .padding(bottom = 10.dp),
             placeholder = {
                 Text(
                     "Nama",
@@ -108,7 +130,8 @@ fun SignUpScreen(navController: NavHostController) {
             value = viewModel.email,
             onValueChange = { viewModel.email = it },
             Modifier
-                .fillMaxWidth().padding(bottom = 10.dp),
+                .fillMaxWidth()
+                .padding(bottom = 10.dp),
             placeholder = {
                 Text(
                     "Email",
@@ -129,7 +152,8 @@ fun SignUpScreen(navController: NavHostController) {
             value = viewModel.password,
             onValueChange = { viewModel.password = it },
             Modifier
-                .fillMaxWidth().padding(bottom = 10.dp),
+                .fillMaxWidth()
+                .padding(bottom = 10.dp),
             placeholder = {
                 Text(
                     "Password",
@@ -146,12 +170,14 @@ fun SignUpScreen(navController: NavHostController) {
                 unfocusedBorderColor = Color(0xFFE8ECF4)
             ),
             visualTransformation = if (viewModel.isPasswordVisible) VisualTransformation.None
-                                   else PasswordVisualTransformation()
+            else PasswordVisualTransformation()
         )
         OutlinedTextField(
             value = viewModel.passwordConfirm,
             onValueChange = { viewModel.passwordConfirm = it },
-            Modifier.fillMaxWidth().padding(bottom = 10.dp),
+            Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp),
             placeholder = {
                 Text(
                     "Konfirmasi Password",
@@ -168,20 +194,25 @@ fun SignUpScreen(navController: NavHostController) {
                 unfocusedBorderColor = Color(0xFFE8ECF4)
             ),
             visualTransformation = if (viewModel.isPasswordVisible) VisualTransformation.None
-                                   else PasswordVisualTransformation()
+            else PasswordVisualTransformation()
         )
         Button(
-            onClick = { viewModel.handleSignUp() },
+            onClick = {
+                viewModel.isLoading = true
+                viewModel.handleSignUp()
+            },
             Modifier
                 .fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),
             colors = ButtonDefaults.buttonColors(Dark80)
         ) {
-            Text(
-                "Daftar", fontFamily = urbanist,
-                fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(vertical = 15.dp),
-                color = Color.White, fontSize = 17.sp
-            )
+            if (viewModel.isLoading)
+                Text(
+                    "Daftar", fontFamily = urbanist,
+                    fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(vertical = 15.dp),
+                    color = Color.White, fontSize = 17.sp
+                )
+            else CircularProgressIndicator(color = Color.White)
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -210,19 +241,23 @@ fun SignUpScreen(navController: NavHostController) {
             OutlinedButton(
                 onClick = { },
                 shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, Color(0xFFE8ECF4))) {
+                border = BorderStroke(1.dp, Color(0xFFE8ECF4))
+            ) {
                 Image(
                     painterResource(R.drawable.google_ic), contentDescription = "Google",
-                    Modifier.padding(15.dp, 10.dp))
+                    Modifier.padding(15.dp, 10.dp)
+                )
             }
             Spacer(Modifier.width(10.dp))
             OutlinedButton(
                 onClick = { },
                 shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, Color(0xFFE8ECF4))) {
+                border = BorderStroke(1.dp, Color(0xFFE8ECF4))
+            ) {
                 Image(
                     painterResource(R.drawable.facebook_ic), contentDescription = "Facebook",
-                    Modifier.padding(15.dp, 10.dp))
+                    Modifier.padding(15.dp, 10.dp)
+                )
             }
         }
         Column(Modifier.fillMaxSize(), Arrangement.Bottom, Alignment.CenterHorizontally) {

@@ -1,7 +1,6 @@
 package com.example.thriftpoint.ui.screens
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -29,7 +27,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CardElevation
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,42 +37,50 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
+import com.example.thriftpoint.data.remote_source.HttpEndpoint
 import com.example.thriftpoint.ui.theme.Tosca40
 import com.example.thriftpoint.ui.theme.urbanist
 import com.example.thriftpoint.utils.NavRoute
 import com.example.thriftpoint.viewmodels.MainViewModel
+import com.example.thriftpoint.viewmodels.ProductViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BagScreen(navController: NavHostController) {
-    val viewModel: MainViewModel = viewModel()
-    viewModel.selectedItem = "Bag"
+fun CartScreen(navController: NavHostController) {
+    val mainViewModel = hiltViewModel<MainViewModel>()
+    val productViewModel = hiltViewModel<ProductViewModel>()
+    mainViewModel.selectedItem = "Bag"
     var count by remember { mutableIntStateOf(1) }
     var totalPrice by remember { mutableIntStateOf(0) }
 
+    LaunchedEffect(Unit) {
+        productViewModel.getAllProductsInCart()
+        productViewModel.getWishlist()
+    }
+
     Scaffold(
-        topBar = { BagTopBar(navController) },
-        bottomBar = { BottomBar(viewModel, navController) }
+        topBar = { CartTopBar(navController) },
+        bottomBar = { BottomBar(mainViewModel, navController) }
     ) {
         Column(Modifier.padding(it)) {
             Spacer(Modifier.height(25.dp))
-            if (productsInBag.isNotEmpty()) {
-                productsInBag.forEach { product ->
+            if (productViewModel.productsInCart.isNotEmpty()) {
+                productViewModel.productsInCart.forEach { product ->
                     Card(
                         Modifier
                             .fillMaxWidth()
@@ -85,10 +90,11 @@ fun BagScreen(navController: NavHostController) {
                         elevation = CardDefaults.cardElevation(10.dp)
                     ) {
                         Row(Modifier.padding(12.dp)) {
-                            Image(
-                                painterResource(product.img), null,
-                                Modifier
-                                    .width(95.dp)
+                            AsyncImage(
+                                HttpEndpoint.IMG_BASE_URL + product.imageRes ,
+                                null,
+                                modifier = Modifier
+                                    .size(95.dp)
                                     .clip(RoundedCornerShape(14.dp))
                             )
                             Column(Modifier.padding(start = 15.dp)) {
@@ -96,7 +102,7 @@ fun BagScreen(navController: NavHostController) {
                                     product.name, fontFamily = urbanist, fontSize = 16.sp,
                                     fontWeight = FontWeight.Medium
                                 )
-                                Text(product.price, fontFamily = urbanist, fontSize = 20.sp)
+                                Text("${product.price}", fontFamily = urbanist, fontSize = 20.sp)
                                 Spacer(Modifier.height(40.dp))
                                 Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -140,7 +146,7 @@ fun BagScreen(navController: NavHostController) {
                                             border = BorderStroke(1.dp, Color(0xFFDEDEDE)),
                                             color = MaterialTheme.colorScheme.background
                                         ) {
-                                            IconButton(onClick = { productsInBag.remove(product) }) {
+                                            IconButton(onClick = { productViewModel.productsInCart.remove(product) }) {
                                                 Icon(Icons.Default.Delete, null)
                                             }
                                         }
@@ -168,7 +174,7 @@ fun BagScreen(navController: NavHostController) {
                     )
                 }
                 LazyRow {
-                    items(productsInWishlist) { product ->
+                    items(productViewModel.productsInWishlist.toList()) { product ->
                         Card(
                             Modifier.padding(start = 20.dp),
                             shape = RoundedCornerShape(14.dp),
@@ -176,10 +182,11 @@ fun BagScreen(navController: NavHostController) {
                             elevation = CardDefaults.cardElevation(10.dp)
                         ) {
                             Row(Modifier.padding(12.dp)) {
-                                Image(
-                                    painterResource(product.img), null,
-                                    Modifier
-                                        .width(95.dp)
+                                AsyncImage(
+                                    HttpEndpoint.IMG_BASE_URL + product.imageRes ,
+                                    null,
+                                    modifier = Modifier
+                                        .size(95.dp)
                                         .clip(RoundedCornerShape(14.dp))
                                 )
                                 Column(Modifier.padding(start = 15.dp)) {
@@ -187,7 +194,7 @@ fun BagScreen(navController: NavHostController) {
                                         product.name, fontFamily = urbanist, fontSize = 16.sp,
                                         fontWeight = FontWeight.Medium
                                     )
-                                    Text(product.price, fontFamily = urbanist, fontSize = 20.sp)
+                                    Text("${product.price}", fontFamily = urbanist, fontSize = 20.sp)
                                     Spacer(Modifier.height(40.dp))
                                     Row {
                                         OutlinedButton(
@@ -202,7 +209,7 @@ fun BagScreen(navController: NavHostController) {
                                             border = BorderStroke(1.dp, Color(0xFFDEDEDE)),
                                             color = MaterialTheme.colorScheme.background
                                         ) {
-                                            IconButton(onClick = { productsInBag.remove(product) }) {
+                                            IconButton(onClick = { productViewModel.productsInCart.remove(product) }) {
                                                 Icon(Icons.Default.Delete, null)
                                             }
                                         }
@@ -255,7 +262,7 @@ fun BagScreen(navController: NavHostController) {
 }
 
 @Composable
-fun BagTopBar(navController: NavHostController) {
+fun CartTopBar(navController: NavHostController) {
     Row(
         Modifier
             .fillMaxWidth()
