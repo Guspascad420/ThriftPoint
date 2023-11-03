@@ -10,7 +10,7 @@ object HttpEndpoint {
     const val PRODUCTS = "$BASE_URL/products"
     const val ADD_PRODUCTS_IN_CART = "$USER/carts/add"
     const val REMOVE_PRODUCTS_IN_CART = "$USER/carts/remove"
-    const val GET_PRODUCTS_IN_CART = "$USER/carts/add"
+    const val GET_PRODUCTS_IN_CART = "$USER/carts"
     const val WISHLIST = "$USER/wishlists"
     const val ADD_WISHLIST = "$WISHLIST/add"
     const val REMOVE_WISHLIST = "$WISHLIST/remove"
