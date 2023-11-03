@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -41,15 +40,16 @@ import com.example.thriftpoint.data.remote_source.HttpEndpoint
 import com.example.thriftpoint.ui.theme.Tosca40
 import com.example.thriftpoint.ui.theme.urbanist
 import com.example.thriftpoint.utils.CommonTopBar
-import com.example.thriftpoint.utils.NavRoute
 import com.example.thriftpoint.viewmodels.MainViewModel
 import com.example.thriftpoint.viewmodels.ProductViewModel
+import java.text.DecimalFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConfirmOrder(viewModel: MainViewModel, navController: NavHostController, totalPrice: String?) {
-    val userDataState = viewModel.userDataState.collectAsState()
-    val productViewModel = hiltViewModel<ProductViewModel>()
+fun ConfirmOrder(mainViewModel: MainViewModel, productViewModel: ProductViewModel,
+    navController: NavHostController, totalPrice: String?) {
+    val userDataState = mainViewModel.userDataState.collectAsState()
+    val formatter = DecimalFormat("#,###")
 
     Scaffold(
         topBar = { CommonTopBar("Konfirmasi Pemesanan", navController) },
@@ -80,7 +80,8 @@ fun ConfirmOrder(viewModel: MainViewModel, navController: NavHostController, tot
                                 product.name, fontFamily = urbanist, fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium
                             )
-                            Text("${product.price}", fontFamily = urbanist, fontSize = 20.sp)
+                            Text("Rp ${formatter.format(product.price)}",
+                                fontFamily = urbanist, fontSize = 20.sp)
                             Spacer(Modifier.height(40.dp))
                             Button(
                                 onClick = { /*TODO*/ },
