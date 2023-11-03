@@ -1,6 +1,7 @@
 package com.example.thriftpoint.viewmodels
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,8 +26,8 @@ class ProductViewModel @Inject constructor(
     val allProductsState = MutableStateFlow<Resource<ProductResponse>>(Resource.Loading())
     val productsInCartState = MutableStateFlow<Resource<ProductResponse>>(Resource.Loading())
     val productsInWishlistState = MutableStateFlow<Resource<ProductResponse>>(Resource.Loading())
-    val productsInWishlist = mutableSetOf<Product>()
-    val productsInCart = mutableSetOf<Product>()
+    val productsInWishlist = mutableStateListOf<Product>()
+    val productsInCart = mutableStateListOf<Product>()
 
     fun getAllProducts() {
         viewModelScope.launch {
@@ -60,10 +61,26 @@ class ProductViewModel @Inject constructor(
         }
     }
 
+    fun removeProductFromWishlist(request: Product) {
+        viewModelScope.launch {
+            remoteSource.removeProductFromWishlist(request).collect {
+                productsInWishlist.remove(request)
+            }
+        }
+    }
+
     fun addProductToCart(request: Product) {
         viewModelScope.launch {
             remoteSource.addProductToCart(request).collect {
                 productsInCart.add(request)
+            }
+        }
+    }
+
+    fun removeProductFromCart(request: Product) {
+        viewModelScope.launch {
+            remoteSource.removeProductFromCart(request).collect {
+                productsInCart.remove(request)
             }
         }
     }
