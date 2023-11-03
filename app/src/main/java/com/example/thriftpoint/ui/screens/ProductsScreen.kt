@@ -161,7 +161,7 @@ fun ProductCard(product: Product, viewModel: ProductViewModel, navigateToDetails
                         wishlistIcon = Icons.Default.Favorite
                         wishlistIconTint = Color.Red
                     } else {
-                        viewModel.addProductToWishlist(product)
+                        viewModel.removeProductFromWishlist(product)
                         wishlistIcon = Icons.Default.FavoriteBorder
                         wishlistIconTint = Color(0xFF9BA5B7)
                     }
