@@ -54,13 +54,12 @@ fun WishlistScreen(viewModel: ProductViewModel, navController: NavHostController
         if (viewModel.productsInWishlist.isEmpty()) {
             viewModel.getWishlist()
             delay(2000)
-            productsInWishlistState.value.data?.let {
-                viewModel.productsInWishlist.addAll(it.data)
-                isLoading = false
+            productsInWishlistState.value.data?.let { response ->
+                if (response.data != viewModel.productsInWishlist)
+                    viewModel.productsInWishlist.addAll(response.data)
             }
-        } else {
-            isLoading = false
         }
+        isLoading = false
     }
 
 
@@ -97,7 +96,7 @@ fun WishlistScreen(viewModel: ProductViewModel, navController: NavHostController
                 if (!isLoading)
                     LazyVerticalGrid(GridCells.Fixed(2),
                         horizontalArrangement = Arrangement.spacedBy(15.dp)) {
-                        items(viewModel.productsInWishlist.toList()) { product ->
+                        items(viewModel.productsInWishlist) { product ->
                             ProductCard(product, viewModel) {
                                 navController.navigate(
                                     NavRoute.PRODUCT_DETAILS.name + "/" + product.id
