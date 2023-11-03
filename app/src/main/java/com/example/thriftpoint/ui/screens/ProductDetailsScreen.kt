@@ -80,7 +80,7 @@ fun ProductDetailsScreen(viewModel: ProductViewModel, navController: NavHostCont
     Scaffold(
         topBar = { ProductDetailsTopBar(navController) },
         bottomBar = { ProductDetailsBottomBar(product, viewModel::addProductToCart, snackbarHostState) },
-        snackbarHost = { BagSnackbar(snackbarHostState) }
+        snackbarHost = { CartSnackbar(snackbarHostState) }
     ) {
         Column(
             Modifier
@@ -221,7 +221,7 @@ fun ProductDetailsBottomBar(product: Product, onBuyTapped: (Product) -> Unit,
 }
 
 @Composable
-fun BagSnackbar(snackbarHostState: SnackbarHostState) {
+fun CartSnackbar(snackbarHostState: SnackbarHostState) {
     SnackbarHost(snackbarHostState) { data ->
         Snackbar(
             Modifier.padding(bottom = 10.dp, start = 20.dp, end = 20.dp),
