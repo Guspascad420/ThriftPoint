@@ -81,14 +81,14 @@ class MainActivity : ComponentActivity() {
                         AccountDetails(mainViewModel, navController)
                     }
                     composable(NavRoute.BAG.name) {
-                        CartScreen(navController)
+                        CartScreen(productViewModel, navController)
                     }
                     composable(NavRoute.EDIT_PROFILE.name) {
                         EditProfile(mainViewModel, navController)
                     }
                     composable(NavRoute.CONFIRM_ORDER.name + "/{totalPrice}") {
                         val totalPrice = it.arguments?.getString("totalPrice")
-                        ConfirmOrder(mainViewModel, navController, totalPrice)
+                        ConfirmOrder(mainViewModel, productViewModel, navController, totalPrice)
                     }
                     composable(NavRoute.WISHLIST.name) {
                         WishlistScreen(productViewModel, navController)
